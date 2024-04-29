@@ -1,0 +1,70 @@
+CREATE TABLE users(
+      id BIGINT(20) AUTO_INCREMENT NOT NULL,
+      name VARCHAR(100) NOT NULL,
+      email VARCHAR(100) UNIQUE,
+
+      PRIMARY KEY (id)
+      INDEX email_index (email)
+);
+
+CREATE TABLE comments(
+      id BIGINT(20) AUTO_INCREMENT NOT NULL,
+      user_id BIGINT(20) DEFAULT 0,
+      content TEXT NOT NULL,
+
+      PRIMARY KEY (id)
+      INDEX user_id_index (user_id)
+      FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE channels(
+      id INTEGER AUTO_INCREMENT NOT NULL,
+      name VARCHAR(20) NOT NULL UNIQUE,
+
+      PRIMARY KEY (id)
+);
+
+CREATE TABLE programs(
+      id INTEGER AUTO_INCREMENT NOT NULL,
+      channel_id INTEGER NOT NULL,
+      title VARCHAR(100) NOT NULL,
+      start_time DATETIME NOT NULL,
+      stop_time DATETIME NOT NULL,
+      type VARCHAR(10) NOT NULL,
+      genre VARCHAR(20) NOT NULL,
+
+      PRIMARY KEY (id),
+      INDEX start_time_index (start_time),
+      INDEX stop_time_index (stop_time),
+      FOREIGN KEY (channel_id) REFERENCES channels(id)
+);
+
+CREATE TABLE seasons(
+      id INTEGER AUTO_INCREMENT NOT NULL,
+      program_id INTEGER NOT NULL,
+      number VARCHAR(10) NOT NULL,
+
+      PRIMARY KEY (id),
+      FOREIGN KEY (program_id) REFERENCES programs(id)
+);
+
+CREATE TABLE episodes(
+      id INTEGER AUTO_INCREMENT NOT NULL,
+      program_id INTEGER NOT NULL,
+      season_id INTEGER NOT NULL,
+      title VARCHAR(50) NOT NULL,
+
+      PRIMARY KEY (id),
+      FOREIGN KEY (program_id) REFERENCES programs(id),
+      FOREIGN KEY (season_id) REFERENCES seasons(id)
+);
+
+CREATE TABLE viewing_histories(
+      id INTEGER AUTO_INCREMENT NOT NULL,
+      user_id BIGINT(20) NOT NULL,
+      episode_id INTEGER NOT NULL,
+
+      PRIMARY KEY (id),
+      FOREIGN KEY (user_id) REFERENCES users(id),
+      FOREIGN KEY (episode_id) REFERENCES episodes(id)
+);

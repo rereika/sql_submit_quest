@@ -1,0 +1,92 @@
+
+//1.エピソード視聴数トップ3のエピソードタイトルと視聴数を取得する
+
+SELECT
+    episodes.title, COUNT(viewing_histories.episode_id) AS view_count
+FROM
+    viewing_histories
+INNER JOIN
+    episodes ON viewing_histories.episode_id = episodes.id
+GROUP BY
+    viewing_histories.episode_id
+ORDER BY
+    view_count DESC
+LIMIT 3;
+
+
+//2.エピソード視聴数トップ3の番組タイトル、シーズン数、エピソード数、エピソードタイトル、視聴数を取得する
+
+SELECT
+    programs.title AS '番組タイトル',
+    MAX(seasons.number_of_seasons) AS 'シーズン数',
+    COUNT(DISTINCT episodes.id) AS 'エピソード数',
+    (
+        SELECT episodes.title
+        FROM episodes
+        WHERE episodes.id = MAX(viewing_histories.episode_id)
+    ) AS 'エピソードタイトル',
+    COUNT(viewing_histories.episode_id) AS '視聴数'
+FROM
+    programs
+INNER JOIN
+    episodes ON programs.id = episodes.program_id
+LEFT JOIN
+    viewing_histories ON episodes.id = viewing_histories.episode_id
+LEFT JOIN
+    seasons ON programs.id = seasons.program_id
+GROUP BY
+    programs.title
+ORDER BY
+    COUNT(viewing_histories.episode_id) DESC
+LIMIT 3;
+
+
+//3.本日放送される全ての番組に対して、チャンネル名、放送開始時刻(日付+時間)、放送終了時刻、シーズン数、エピソード数、エピソードタイトル、エピソード詳細を取得する。
+
+SELECT
+    channels.name AS 'チャンネル名',
+    programs.start_time AS '放送開始時刻',
+    programs.stop_time AS '放送終了時刻',
+    MAX(seasons.number_of_seasons) AS 'シーズン数',
+    COUNT(DISTINCT episodes.id) AS 'エピソード数',
+    MAX(episodes.title) AS 'エピソードタイトル'
+FROM
+    programs
+INNER JOIN
+    channels ON programs.channel_id = channels.id
+LEFT JOIN
+    episodes ON programs.id = episodes.program_id
+LEFT JOIN
+    seasons ON programs.id = seasons.program_id
+WHERE
+    DATE(programs.start_time) = CURDATE() -- 本日の番組を抽出
+GROUP BY
+    programs.id
+ORDER BY
+    programs.start_time;
+
+
+//4.ドラマのチャンネルに対して、放送開始時刻、放送終了時刻、シーズン数、エピソード数、エピソードタイトル、エピソード詳細を本日から一週間分取得する。
+
+SELECT
+    channels.name AS 'チャンネル名',
+    programs.start_time AS '放送開始時刻',
+    programs.stop_time AS '放送終了時刻',
+    MAX(seasons.number_of_seasons) AS 'シーズン数',
+    COUNT(DISTINCT episodes.id) AS 'エピソード数',
+    MAX(episodes.title) AS 'エピソードタイトル'
+FROM
+    programs
+INNER JOIN
+    channels ON programs.channel_id = channels.id
+LEFT JOIN
+    episodes ON programs.id = episodes.program_id
+LEFT JOIN
+    seasons ON programs.id = seasons.program_id
+WHERE
+    channels.name IN ('ドラマ1', 'ドラマ2') AND
+    DATE(programs.start_time) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+GROUP BY
+    programs.id
+ORDER BY
+    programs.start_time;
